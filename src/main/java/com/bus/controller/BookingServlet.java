@@ -1,11 +1,11 @@
 package com.bus.controller;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
-import com.bus.util.DBConnection;
+import com.bus.dao.BookingDAO;
+import com.bus.dao.BusDAO;
+import com.bus.model.Booking;
+import com.bus.model.Bus;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,68 +20,58 @@ public class BookingServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		response.setContentType("text/html");
+		HttpSession session = request.getSession();
 
-		int busId = Integer.parseInt(request.getParameter("busId"));
+		Integer userId = (Integer) session.getAttribute("userId");
 
-		int seats = Integer.parseInt(request.getParameter("seats"));
-		System.out.println(busId);
+		if (userId == null) {
+			response.sendRedirect("login.jsp");
+			return;
+		}
 
-		try {
+		String busIdStr = request.getParameter("busId");
+		String seatsStr = request.getParameter("seats");
 
-			Connection con = DBConnection.getConnection();
+		// Debugging
+		System.out.println("Bus ID = " + busIdStr);
+		System.out.println("Seats = " + seatsStr);
 
-			PreparedStatement ps = con.prepareStatement("select available_seats,fare from buses where bus_id=?");
+		if (busIdStr == null || busIdStr.trim().isEmpty() || seatsStr == null || seatsStr.trim().isEmpty()) {
 
-			ps.setInt(1, busId);
+			response.sendRedirect("booking.jsp");
+			return;
+		}
 
-			ResultSet rs = ps.executeQuery();
+		int busId = Integer.parseInt(busIdStr);
+		int seats = Integer.parseInt(seatsStr);
 
-			if (rs.next()) {
+		Booking booking = new Booking();
 
-				int available = rs.getInt("available_seats");
+		booking.setUserId(userId);
+		booking.setBusId(busId);
+		booking.setSeatsBooked(seats);
 
-				double fare = rs.getDouble("fare");
+		// Temporary
+		BusDAO busDao = new BusDAO();
 
-				if (available >= seats) {
+		Bus bus = busDao.getBusById(busId);
 
-					double total = fare * seats;
+		double totalAmount = bus.getFare() * seats;
 
-					HttpSession session = request.getSession();
-					
+		booking.setTotalAmount(totalAmount);
+		BookingDAO dao = new BookingDAO();
 
-					System.out.println(session.getAttribute("userId"));
+		boolean status = dao.bookTicket(booking);
 
-					int userId = (Integer) session.getAttribute("userId");
+		if (status) {
 
-					PreparedStatement book = con.prepareStatement(
-							"insert into bookings(user_id,bus_id,seats_booked,total_amount) values(?,?,?,?)");
+			busDao.updateSeats(busId, seats);
 
-					book.setInt(1, userId);
-					book.setInt(2, busId);
-					book.setInt(3, seats);
-					book.setDouble(4, total);
+			response.sendRedirect("success.jsp");
 
-					book.executeUpdate();
+		} else {
 
-					PreparedStatement update = con
-							.prepareStatement("update buses set available_seats=available_seats-? where bus_id=?");
-
-					update.setInt(1, seats);
-					update.setInt(2, busId);
-
-					update.executeUpdate();
-
-					response.sendRedirect("success.jsp");
-
-				} else {
-
-					response.getWriter().println("Seats Not Available");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+			response.sendRedirect("booking.jsp");
 		}
 	}
 }

@@ -1,39 +1,78 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-
-<%
-Integer userId = (Integer) session.getAttribute("userId");
-%>
+	pageEncoding="UTF-8"%>
 
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Search Bus</title>
+
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+
+<style>
+body {
+	background: linear-gradient(to right, #4facfe, #00f2fe);
+	min-height: 100vh;
+}
+
+.search-card {
+	margin-top: 80px;
+	border-radius: 20px;
+}
+</style>
+
 </head>
 <body>
 
-<h2>Search Bus</h2>
+	<div class="container">
 
-<%-- <% if(userId != null) { %> --%>
-<%--     <h3>Logged In User ID: <%= userId %></h3> --%>
-<%-- <% } else { %> --%>
-<!--     <h3>User Not Logged In</h3> -->
-<%-- <% } %> --%>
+		<div class="row justify-content-center">
 
-<form action="searchBus" method="get">
+			<div class="col-md-6">
 
-    Source:
-    <input type="text" name="source" required>
-    <br><br>
+				<div class="card shadow-lg search-card">
 
-    Destination:
-    <input type="text" name="destination" required>
-    <br><br>
+					<div class="card-header bg-info text-white text-center">
+						<h3>🚌 Search Bus</h3>
+					</div>
 
-    <input type="submit" value="Search Bus">
+					<div class="card-body p-4">
 
-</form>
+						<form action="searchBus" method="get">
+
+							<div class="mb-3">
+								<label class="form-label">Source</label> <input type="text"
+									name="source" class="form-control"
+									placeholder="Enter Source City" required>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label">Destination</label> <input type="text"
+									name="destination" class="form-control"
+									placeholder="Enter Destination City" required>
+							</div>
+
+							<div class="d-grid">
+								<button type="submit" class="btn btn-info text-white">
+									Search Bus</button>
+							</div>
+
+						</form>
+
+					</div>
+
+					<div class="card-footer text-center text-muted">Find
+						available buses and book your journey.</div>
+
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
 
 </body>
 </html>
